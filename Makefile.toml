@@ -1,0 +1,53 @@
+[config]
+skip_core_tasks = true
+
+[tasks.prebuild]
+command = "cp"
+args =["crt0.s", "taget\\"]
+
+# setup make file
+#CRT_FILE=$(echo $CRT_LOCAL)
+#CRT_OUTPUT=target/crt0.o
+#PROJECT_NAME=$(echo $APP_NAME)
+#TARGET=$(echo $TARGET)
+#THUMB_TARGET=$(echo $TARGET).json
+#all: build
+#build: 
+#arm-none-eabi-as \$(CRT_FILE) -o \$(CRT_OUTPUT)
+#cargo xbuild --target \$(THUMB_TARGET)
+#build-prod:
+#arm-none-eabi-as \$(CRT_FILE) -o \$(CRT_OUTPUT)
+#cargo xbuild --target \$(THUMB_TARGET) --release
+#arm-none-eabi-objcopy -O binary target/\$(TARGET)/release/\$(PROJECT_NAME) target/\$(PROJECT_NAME).gba
+#gbafix target/\$(PROJECT_NAME).gba
+
+[tasks.build]
+dependencies = [
+    "prebuildarm",
+    "buildcargo",
+    "copyelf",
+    "fixsize"
+]
+
+[tasks.prebuildarm]
+command = "arm-none-eabi-as"
+args = ["crt0.s","-o","target\\crt0.o"]
+
+[tasks.buildcargo]
+command="cargo"
+args=["xbuild", "--target", "thumbv4-none-agb.json", "--release"]
+
+[tasks.copyelf]
+command="arm-none-eabi-objcopy"
+args=["-O", "binary", "target/thumbv4-none-agb/release/hellogba", "target/hellogba.gba"]
+
+[tasks.fixsize]
+command="gbafix"
+args=["target/hellogba.gba"]
+
+
+[tasks.default]
+dependencies = [
+    "prebuild",
+    "build"
+]
